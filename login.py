@@ -32,10 +32,20 @@ password_field.send_keys(password)
 login_button = driver.find_element(By.ID, "login-btn")
 assert not login_button.get_attribute("disabled")
 login_button.click()
-time.sleep(20000)
+time.sleep(200)
 
-assert "root" in driver.page_source
+search_terms = ["Naruto", "One Piece", "Seven Deadly Sins", "No manga found"]
+for term in search_terms:
+    search_box = driver.find_element(By.ID, "manga-search")
+    search_box.clear()
+    search_box.send_keys(term)
+    search_box.send_keys(Keys.RETURN)
+
+    time.sleep(20)  # Wait for search results
+
+    if term == "No manga found":
+        assert "No manga found" in driver.page_source
+    else:
+        assert term in driver.page_source
+
 driver.quit()
-
-
-

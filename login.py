@@ -1,51 +1,55 @@
-import selenium
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
-
 # Initialize WebDriver
 driver = webdriver.Chrome()
 
-# Open the application
-'driver.get("https://myalice-automation-test.netlify.app")'
+try:
+    # Navigate to the website and log in
+    driver.get("https://myalice-automation-test.netlify.app")
+    wait = WebDriverWait(driver, 1000)
+
+    # Assuming login is required first
+    username = driver.find_element(By.ID, "username")
+    password = driver.find_element(By.ID, "password")
+    username.send_keys("testuser")
+    password.send_keys("password")
+    login_button = driver.find_element(By.ID, "login-btn")
+    assert not login_button.get_attribute("disabled")
+    login_button.click()
+    time.sleep(200)
+
+    # Wait until manga search page loads
+    wait.until(EC.presence_of_element_located((By.ID, "manga-search")))
 
 
-# store name and password and login url
-username = "testuser"
-password = "password"
-login_url = "https://myalice-automation-test.netlify.app"
-driver.get(login_url)
-driver.maximize_window()
+    def search_and_verify(term, expected_result):
+        search_box = driver.find_element(By.ID, "manga-search")
+        search_box.clear()
+        search_box.send_keys(term)
+        search_button = driver.find_element(By.CLASS_NAME, "bg-green-500 text-white py-2 px-4 rounded mr-2")
+        search_button.click()
+
+        # Verify results
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "mangaCard")))
+        manga_cards = driver.find_elements(By.CLASS_NAME, "mangaCard")
+
+        if expected_result == "No manga found":
+            assert "No manga found" in driver.page_source, f"Expected 'No manga found' message, but it wasn't found."
+        else:
+            assert any(expected_result in card.text for card in
+                       manga_cards), f"Expected '{expected_result}' but it wasn't found."
 
 
-#find element of username and password
-username_field = driver.find_element(By.ID, value="username")
-password_field = driver.find_element(By.ID, value="password")
+    # Perform searches and verifications
+    search_and_verify("Naruto", "Naruto")
+    search_and_verify("One Piece", "One Piece")
+    search_and_verify("Seven Deadly Sins", "Seven Deadly Sins")
+    search_and_verify("No manga found", "No manga found")
 
-#send the keys
-username_field.send_keys(username)
-password_field.send_keys(password)
-
-#try to login
-
-login_button = driver.find_element(By.ID, "login-btn")
-assert not login_button.get_attribute("disabled")
-login_button.click()
-time.sleep(200)
-
-search_terms = ["Naruto", "One Piece", "Seven Deadly Sins", "No manga found"]
-for term in search_terms:
-    search_box = driver.find_element(By.ID, "manga-search")
-    search_box.clear()
-    search_box.send_keys(term)
-    search_box.send_keys(Keys.RETURN)
-
-    time.sleep(20)  # Wait for search results
-
-    if term == "No manga found":
-        assert "No manga found" in driver.page_source
-    else:
-        assert term in driver.page_source
-
-driver.quit()
+finally:
+    # Close the browser
+    driver.quit()

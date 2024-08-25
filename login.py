@@ -34,8 +34,8 @@ try:
         search_button.click()
 
         # Verify results
-        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "mangaCard")))
-        manga_cards = driver.find_elements(By.CLASS_NAME, "mangaCard")
+        wait.until(EC.presence_of_element_located((By.ID, "manga-name")))
+        manga_cards = driver.find_elements(By.ID, "manga-name")
 
         if expected_result == "No manga found":
             assert "No manga found" in driver.page_source, f"Expected 'No manga found' message, but it wasn't found."
